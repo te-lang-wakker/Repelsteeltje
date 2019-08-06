@@ -24,30 +24,33 @@ namespace Repelsteeltje.App
         public DirectoryInfo Location { get; }
         public NameTypes NameTypes { get; }
 
-        public Ranks Boys { get; set; }
-        public Ranks Girls { get; set; }
-        public Ranks this[NameTypes nameType]
+        public Ranks Boys
         {
             get
             {
-                switch (nameType)
+                if(_boys is null || HasChangedFiles())
                 {
-                    case NameTypes.Boys: return GetRanks(NameTypes.Boys);
-                    case NameTypes.Girls: return GetRanks(NameTypes.Girls);
-                    default: return null;
+                    _boys = GetRanks(NameTypes.Boys);
                 }
-            }
-            private set
-            {
-                switch (nameType)
-                {
-                    case NameTypes.Boys: Boys = value; break;
-                    case NameTypes.Girls: Girls = value; break;
-                }
+                return _boys;
             }
         }
+        private Ranks _boys;
 
-        public Ranks CurrentRanks =>this[CurrentNameType]; 
+        public Ranks Girls
+        {
+            get
+            {
+                if (_girls is null || HasChangedFiles())
+                {
+                    _girls = GetRanks(NameTypes.Girls);
+                }
+                return _girls;
+            }
+        }
+        private Ranks _girls;
+
+        public Ranks CurrentRanks => NameTypes == NameTypes.Girls ? Girls : Boys;
         public Votes CurrentVotes => CurrentRanks.Votes;
 
         public List<Name> OwnBoyVetos { get; }
@@ -148,32 +151,23 @@ namespace Repelsteeltje.App
             return false;
         }
 
-        public void UpdateIfNeeded()
-        {
-            if (HasChangedFiles())
-            {
-                Boys = null;
-                Girls = null;
-            }
-        }
-
         public void UpdateCurrentNameType()
         {
             if (NameTypes.IsSingleGender()) { return; }
             if (Rnd.NextDouble() < 0.8) { return; }
 
-            else if (CurrentNameType == NameTypes.Boys)
+            if (CurrentNameType == NameTypes.Boys)
             {
                 CurrentNameType = NameTypes.Girls;
             }
-            CurrentNameType = NameTypes.Boys;
+            else
+            {
+                CurrentNameType = NameTypes.Boys;
+            }
         }
 
         private Ranks GetRanks(NameTypes tp)
         {
-            if (tp == NameTypes.Boys && Boys != null) { return Boys; }
-            if (tp == NameTypes.Girls && Girls != null) { return Girls; }
-
             var votes = Location.EnumerateFiles(string.Format("*.{0}.xml", tp.ToString().ToLowerInvariant()));
             var vetos = Location.EnumerateFiles(string.Format("*.{0}.vetos.txt", tp.ToString().ToLowerInvariant()));
 
@@ -185,7 +179,6 @@ namespace Repelsteeltje.App
                 NameType = tp
             };
             ranks.Recalculate();
-            this[tp] = ranks;
             return ranks;
         }
     }

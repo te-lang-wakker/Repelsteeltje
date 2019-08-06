@@ -17,7 +17,6 @@ namespace Repelsteeltje.App
 
             while (true)
             {
-                state.UpdateIfNeeded();
                 state.UpdateCurrentNameType();
                 state.SetFirstAndSecond();
 
