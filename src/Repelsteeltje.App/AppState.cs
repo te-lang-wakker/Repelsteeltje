@@ -91,7 +91,13 @@ namespace Repelsteeltje.App
 
         public List<Rank> GetNamesWithoutVotes()
         {
-            var names = CurrentRanks.ToDictionary(rank => rank.Name, rank => rank);
+            var names = new Dictionary<Name, Rank>(CurrentRanks.Count);
+
+            foreach(var kvp in CurrentRanks)
+            {
+                names[kvp.Name] = kvp;
+            }
+                
             foreach (var vote in CurrentVotes)
             {
                 names.Remove(vote.Left);
@@ -172,7 +178,7 @@ namespace Repelsteeltje.App
             var vetos = Location.EnumerateFiles(string.Format("*.{0}.vetos.txt", tp.ToString().ToLowerInvariant()));
 
             var ranks = new Ranks(
-                Names.FromDirectory(Location, tp),
+                Names.FromDirectory(Location, tp).Distinct(),
                 votes.SelectMany(file => Votes.Load(file)),
                 vetos.SelectMany(file => Vetos.Load(file)))
             {
